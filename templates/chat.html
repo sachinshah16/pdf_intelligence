@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with {{ pdf.name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --user-msg: rgba(99, 102, 241, 0.15);
+            --ai-msg: rgba(30, 41, 59, 0.8);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 1.5rem 2rem;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 1rem 1.5rem;
+            border-radius: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: var(--user-msg);
+            color: white;
+            border-bottom-right-radius: 4px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: var(--ai-msg);
+            color: #e2e8f0;
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .input-area {
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .input-wrapper {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 0.8rem 1rem;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover { opacity: 0.9; transform: scale(1.02); }
+
+        .btn-back {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-back:hover { color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <a href="{% url 'extract_pdf:upload' %}" class="btn-back">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Back to Dashboard
+            </a>
+            <h1 style="font-size: 1.2rem; margin-top: 0.5rem;">AI Chat: {{ pdf.name }}</h1>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--success);">Online</div>
+    </div>
+
+    <div class="chat-container" id="chat-messages">
+        <div class="message ai-message">
+            Hello! I've analyzed <strong>{{ pdf.name }}</strong>. Feel free to ask me any questions about its content, tables, or images!
+        </div>
+    </div>
+
+    <div class="input-area">
+        <form id="chat-form" class="input-wrapper">
+            {% csrf_token %}
+            <input type="text" id="user-query" placeholder="Ask a question about this document..." autocomplete="off" required>
+            <button type="submit">Ask AI</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('user-query');
+        const messages = document.getElementById('chat-messages');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = input.value.strip ? input.value.trim() : input.value;
+            if (!query) return;
+
+            // Add user message
+            addMessage(query, 'user');
+            input.value = '';
+
+            // Loading state
+            const loadingMsg = addMessage('Thinking...', 'ai');
+
+            try {
+                const response = await fetch('', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: `query=${encodeURIComponent(query)}`
+                });
+                const data = await response.json();
+                loadingMsg.textContent = data.response;
+            } catch (err) {
+                loadingMsg.textContent = "Sorry, I encountered an error. Please try again.";
+            }
+
+            messages.scrollTop = messages.scrollHeight;
+        });
+
+        function addMessage(text, side) {
+            const div = document.createElement('div');
+            div.className = `message ${side}-message`;
+            div.textContent = text;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            return div;
+        }
+    </script>
+</body>
+</html>

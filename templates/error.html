@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container animate-fade" style="max-width: 600px; margin: 8rem auto; text-align: center;">
+    <div style="background: rgba(255, 68, 68, 0.05); border: 1px solid rgba(255, 68, 68, 0.2); border-radius: 24px; padding: 4rem 2rem; backdrop-filter: blur(20px);">
+        <div style="width: 80px; height: 80px; background: rgba(255, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+            <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="rgb(255, 68, 68)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+
+        <h1 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 1rem; color: #ff6b6b;">Extraction Failed</h1>
+        <p style="color: var(--text-dim); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">
+            We encountered a problem while digitizing <strong>{{ task.filename }}</strong>.
+        </p>
+
+        <div style="background: rgba(0,0,0,0.2); border-left: 4px solid #ff4444; padding: 1.5rem; text-align: left; margin-bottom: 3rem; border-radius: 8px;">
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #ff6b6b; margin: 0;">{{ task.error_message|default:"Internal orchestration error" }}</p>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{% url 'pdf_extractor:upload_pdf' %}" class="btn-primary" style="padding: 0.8rem 2rem;">Try Again</a>
+            <a href="{% url 'pdf_extractor:task_list' %}" style="padding: 0.8rem 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); color: var(--text-light); text-decoration: none; font-weight: 600; display: flex; align-items: center; transition: all 0.3s; background: rgba(255,255,255,0.05);">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

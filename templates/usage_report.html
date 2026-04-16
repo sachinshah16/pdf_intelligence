@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block extra_css %}
+<style>
+    .report-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+    }
+    
+    .stats-header {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .stat-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        padding: 2rem;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stat-value {
+        display: block;
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, var(--primary), #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+    
+    .audit-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 20px;
+        overflow: hidden;
+    }
+    
+    .audit-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .audit-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .audit-table th {
+        text-align: left;
+        padding: 1rem 2rem;
+        font-size: 0.75rem;
+        color: var(--text-dim);
+        background: rgba(255,255,255,0.01);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .audit-table td {
+        padding: 1rem 2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        font-size: 0.9rem;
+    }
+    
+    .badge {
+        padding: 0.3rem 0.7rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .badge-success { background: rgba(34, 197, 94, 0.1); color: #4ade80; }
+    .badge-failed { background: rgba(239, 68, 68, 0.1); color: #f87171; }
+    
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-dim);
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+        transition: color 0.2s;
+    }
+    .back-btn:hover { color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container animate-fade">
+    <a href="{% url 'pdf_extractor:task_list' %}" class="back-btn">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Back to Dashboard
+    </a>
+    
+    <div style="margin-bottom: 3rem;">
+        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem;">AI Intelligence Summary</h1>
+        <p style="color: var(--text-dim);">Historical performance and resource consumption audit across all processed datasets.</p>
+    </div>
+    
+    <div class="stats-header">
+        <div class="stat-card">
+            <p class="stat-label">AI Interactions</p>
+            <h3 class="stat-value">{{ stats.total_requests|default:0 }}</h3>
+            <p class="stat-sub">avg: {{ stats.avg_requests|floatformat:1 }} per doc</p>
+        </div>
+        <div class="stat-card">
+              <p class="stat-label">Total Digitized PDFs</p>
+              <h3 class="stat-value">{{ stats.total_tasks|default:0 }}</h3>
+        </div>
+        <div class="stat-card">
+              <p class="stat-label">Avg Processing Speed</p>
+              <h3 class="stat-value">{% if stats.avg_time %}{{ stats.avg_time|floatformat:1 }}s{% else %}0s{% endif %}</h3>
+              <p class="stat-sub">total: {{ stats.total_time|floatformat:1 }}s</p>
+        </div>
+        <div class="stat-card">
+              <p class="stat-label">Intelligence Content</p>
+              <h3 class="stat-value">{{ stats.total_tokens|default:0|intcomma }}</h3>
+              <p class="stat-sub">tokens</p>
+        </div>
+    </div>
+    
+    <div class="audit-card">
+        <div class="audit-header">
+            <h3 style="margin: 0; font-weight: 700;">Task Performance Ledger</h3>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">Showing recent 50 runs</span>
+        </div>
+        <table class="audit-table">
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th>AI Requests</th>
+                    <th>Tokens</th>
+                    <th>Status</th>
+                    <th>Processed At</th>
+                    <th>Time (Sec)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td style="font-weight: 600;">{{ task.filename }}</td>
+                    <td>{{ task.request_count }}</td>
+                    <td>{{ task.token_usage|intcomma }}</td>
+                    <td>
+                        {% if task.status == 'completed' %}
+                            <span class="badge badge-success">Succeeded</span>
+                        {% else %}
+                            <span class="badge badge-failed">{{ task.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-dim);">{{ task.updated_at|date:"M d, Y H:i" }}</td>
+                    <td>{{ task.formatted_time }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

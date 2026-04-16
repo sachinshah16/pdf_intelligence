@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Extraction | Upload</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
+        }
+
+        .dashboard-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 2rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* Upload Modal/Section */
+        .upload-section {
+            display: none;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 3rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.02);
+            margin: 1.5rem 0;
+        }
+
+        .drop-zone:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
+
+        input[type="file"] { display: none; }
+
+        /* Documents List */
+        .doc-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .doc-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .doc-card:hover { border-color: var(--primary); transform: translateX(5px); }
+
+        .doc-info h3 { font-size: 1.1rem; margin-bottom: 0.2rem; }
+        .doc-meta { font-size: 0.85rem; color: var(--text-dim); display: flex; gap: 1rem; }
+
+        .actions { display: flex; gap: 0.8rem; }
+
+        .badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100;
+        }
+
+        .spinner {
+            width: 40px; height: 40px; border: 3px solid rgba(99, 102, 241, 0.2);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 1rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>My Documents</h1>
+            <button class="btn" onclick="toggleUpload()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Extract New PDF
+            </button>
+        </div>
+
+        <!-- Upload Section (Hidden by default) -->
+        <div class="upload-section" id="upload-section">
+            <h2 style="margin-bottom: 1rem;">New Extraction</h2>
+            <form id="upload-form" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <label class="drop-zone" id="drop-zone">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px; color: var(--primary); margin-bottom: 1rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                    </svg>
+                    <p>Select a PDF to analyze</p>
+                    <input type="file" name="pdf_file" id="pdf_file" accept=".pdf" required onchange="updateFileInfo()">
+                </label>
+                <p id="file-info" style="color: var(--primary); margin-top: -1rem; margin-bottom: 1.5rem;"></p>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <button type="submit" class="btn">Start Extraction</button>
+                    <button type="button" class="btn btn-outline" onclick="toggleUpload()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Document List -->
+        <div class="doc-grid">
+            {% for doc in previous_extractions %}
+            <div class="doc-card">
+                <div class="doc-info">
+                    <h3>{{ doc.name }}</h3>
+                    <div class="doc-meta">
+                        <span>{{ doc.uploaded_at|date:"M d, Y" }}</span>
+                        <span class="badge">Success</span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <a href="{% url 'extract_pdf:results' doc.pk %}" class="btn btn-outline">View Results</a>
+                    <a href="{% url 'extract_pdf:chat' doc.pk %}" class="btn">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        Ask AI
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 4rem; color: var(--text-dim);">
+                <p>No extractions yet. Click "Extract New PDF" to begin.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <p>Crunching PDF data with AI...</p>
+    </div>
+
+    <script>
+        function toggleUpload() {
+            const section = document.getElementById('upload-section');
+            section.style.display = section.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function updateFileInfo() {
+            const input = document.getElementById('pdf_file');
+            const info = document.getElementById('file-info');
+            if (input.files.length > 0) info.textContent = input.files[0].name;
+        }
+
+        document.getElementById('upload-form').addEventListener('submit', () => {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        });
+    </script>
+</body>
+</html>

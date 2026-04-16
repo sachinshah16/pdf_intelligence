@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+*.log
+
+# AI Extraction Artifacts (Dynamic Data)
+output/
+pdf_extractor/output/
+extract_pdf/output/
+media/pdf_extractor/
+media/extract_pdf/
+
+# Environment / Secret Keys
+.env
+secret.key
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container animate-fade" style="max-width: 800px; margin: 5rem auto; padding: 3rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; backdrop-filter: blur(20px);">
+    <div style="margin-bottom: 3rem; text-align: center;">
+        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 0.5rem;">Initialize Extraction</h1>
+        <p style="color: var(--text-dim); font-size: 1.1rem;">Select your PDF document to begin the automated intelligence processing.</p>
+    </div>
+    
+    <form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 2rem;">
+        {% csrf_token %}
+        <div class="upload-zone" style="border: 2px dashed rgba(255,255,255,0.1); border-radius: 16px; padding: 4rem 2rem; text-align: center; background: rgba(255,255,255,0.01); transition: all 0.3s; cursor: pointer;">
+            <input type="file" name="pdf_file" id="id_pdf_file" required style="display: none;">
+            <label for="id_pdf_file" style="cursor: pointer;">
+                <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="var(--primary)" style="margin-bottom: 1.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">Click to browse files</div>
+                <div style="color: var(--text-dim); font-size: 0.9rem;">Maximum file size: 50MB</div>
+            </label>
+        </div>
+        
+        <script>
+            const zone = document.querySelector('.upload-zone');
+            const input = document.getElementById('id_pdf_file');
+            input.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    zone.style.borderColor = 'var(--primary)';
+                    zone.querySelector('div').innerText = e.target.files[0].name;
+                }
+            });
+        </script>
+        
+        <button type="submit" class="btn-primary" style="height: 56px; font-size: 1.1rem; border-radius: 12px; font-weight: 700; width: 100%;">
+            Start AI Intelligence Extraction
+        </button>
+    </form>
+</div>
+{% endblock %}

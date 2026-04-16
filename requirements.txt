@@ -1,0 +1,11 @@
+django
+PyMuPDF
+pillow
+pdfplumber
+paddleocr
+paddlepaddle
+google-genai
+python-docx
+
+# For Mac, paddlepaddle usually comes with paddleocr but if needed:
+# paddlepaddle
