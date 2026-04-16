@@ -6,9 +6,16 @@ import re
 from collections import deque
 from google import genai
 from google.genai import types
+from dotenv import load_dotenv
 
-# API Key provided by the user
-GEMINI_API_KEY = "AIzaSyC2XkS5_WBUegG4uZynRp_r20SakmnwzHE"
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not GEMINI_API_KEY:
+    raise RuntimeError(
+        "GEMINI_API_KEY is not set. Add it to your .env file before running the app."
+    )
 
 class RateLimiter:
     def __init__(self, rpm, tpm=None):

@@ -6,6 +6,7 @@ paddleocr
 paddlepaddle
 google-genai
 python-docx
+python-dotenv
 
 # For Mac, paddlepaddle usually comes with paddleocr but if needed:
 # paddlepaddle
